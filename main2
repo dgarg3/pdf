@@ -1,0 +1,56 @@
+import pandas as pd
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+
+def header(c,text):
+    text = f"Feedback Form {text}"
+    y_position = 750
+    text_width = c.stringWidth(text, "Helvetica", 14)
+    text_width1 = text_width + 40
+    text_height = 12
+    x_position = (letter[0] - text_width) / 2
+    # c.drawString(x_position, y_position, text)
+    c.drawString(x_position, y_position, text)
+    c.line(x_position, y_position - 2, x_position + text_width1, y_position - 2)
+
+
+def create_pdf(output_file, data):
+    # Create a PDF document
+    c = canvas.Canvas(output_file, pagesize=letter)
+
+    # Set font and size
+    c.setFont("Helvetica", 18)
+    header(c, data)
+
+    c.save()
+
+    #     output_pdf_file = f"{group_name_1}_{group_name_2}.pdf"
+    #     generate_pdf(group_data, output_pdf_file)
+    #
+    #
+    # c.drawString(100, 750, "Dynamic Section 1: Example")
+    # c.drawString(100, 730, "Dynamic Section 2: Another Example")
+    #
+    # # Draw lines with unique values from the Excel file
+    # y_position = 700
+    # for row in data.itertuples():
+    #     line = f"Employee Number: {row.feedbackfor}"
+    #     c.drawString(100, y_position, line)
+    #     y_position -= 15  # Adjust the vertical position for the next line
+    #
+    # # Save the PDF
+    # c.save()
+
+# Read Excel file
+excel_file_path = '"test.xlsx"'
+df = pd.read_excel("test.xlsx")
+# Write dynamic sections
+grouped_data = df.groupby([df.columns[0], df.columns[1]])
+
+for (group_name_1, group_name_2), group_data in grouped_data:
+    output_pdf_file = f"{group_name_1}_{group_name_2}.pdf"
+    create_pdf(output_pdf_file,group_name_2)
+
+
+
+
