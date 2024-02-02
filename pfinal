@@ -1,0 +1,159 @@
+import pandas as pd
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib import styles
+import textwrap
+from reportlab.pdfbase.pdfmetrics import stringWidth
+
+def header(c,text):
+    text = f"Feedback Form {text}"
+    y_position = 750
+    text_width = c.stringWidth(text, "Helvetica-Bold", 18)
+    #text_width1 = text_width + 10
+    text_width1 = 180
+    text_height = 12
+    x_position = (letter[0] - text_width) / 2
+    # c.drawString(x_position, y_position, text)
+    c.drawString(x_position, y_position, text)
+    c.line(x_position, y_position - 2, x_position + text_width1, y_position - 2)
+
+def name(c,text):
+    text = f"Employee Name:    {text}"
+    y_position = 725
+    #text_width = c.stringWidth(text, "Helvetica", 14)
+    #text_width1 = text_width + 40
+    text_height = 12
+    #x_position = (letter[0] - text_width) / 2
+    # c.drawString(x_position, y_position, text)
+    x_position = 150
+    c.drawString(x_position, y_position, text)
+    #c.line(x_position, y_position - 2, x_position + text_width1, y_position - 2)
+
+def m_name(c,text):
+    text = f"Manager Name:     {text}"
+    y_position = 700
+    #text_width = c.stringWidth(text, "Helvetica", 14)
+    #text_width1 = text_width + 40
+    text_height = 12
+    #x_position = (letter[0] - text_width) / 2
+    # c.drawString(x_position, y_position, text)
+    x_position = 150
+    c.drawString(x_position, y_position, text)
+    #c.line(x_position, y_position - 2, x_position + text_width1, y_position - 2)
+
+
+def add_single_column_table(c, data):
+    # Set the table style
+    table_style = [('GRID', (0, 0), (-1, -1), 1, colors.black)]
+
+    # Convert data to a list of lists with one element in each sublist
+    #data = [[item] for item in data]
+
+    # Draw the single-column table on the canvas
+    table = Table(data)
+    table.setStyle(TableStyle(table_style))
+    table.wrapOn(c, 0, 0)
+
+    # Determine the starting position for the table
+    x = 150
+    y = c._pagesize[1] - 100 - (len(data) * 12)
+
+    table.drawOn(c, x, y)
+
+
+def wrap_to_fixed_width(text, width):
+    wrapped_lines = textwrap.wrap(text, width=width)
+    wrapped_text = '\n'.join(wrapped_lines)
+    return wrapped_text
+
+
+def add_fback(c, data,*style):
+    # Set the line spacing
+    line_height = 25
+    # Determine the starting position for the lines
+    x = 150
+    #y = c._pagesize[1] - 100
+    y = 675
+    for index,row in df.iterrows():
+        #c.setFont(*style)
+        line_text = f"Feedback By:  {row['feedbackby']}"
+        c.drawString(x, y, line_text)
+        y -= line_height
+        feeline_text = row['feedback']
+        x_rect = x-10
+        y_rect = y+ 10
+        padding = 5
+        textobject = c.beginText(x,y)
+        s = wrap_to_fixed_width(feeline_text,70)
+        for line in s.splitlines(False):
+            textobject.textLine(line.rstrip())
+        adjustment = len(s.splitlines(False))*13
+        c.drawText(textobject)
+        c.rect(x_rect - padding, y_rect + padding, 360 + 15 * padding, -adjustment - 5 * padding,stroke=1, fill=0)
+
+        #c.drawText(x, y, "Line 1\nLine 2\nLine 3")
+        #c.drawText(x, y, s)
+        y -= line_height +adjustment
+        #print(type(row['feedback']))
+        #add_single_column_table(c,['he is not good'])
+
+
+def create_pdf(output_file,headertext,empname,mname,df):
+    #, data,name1):
+    # Create a PDF document
+    c = canvas.Canvas(output_file, pagesize=letter)
+
+    font_name, font_size = "Helvetica-Bold", 18
+    c.setFont(font_name, font_size)
+    header(c, headertext)
+    content_style = ('Helvetica', 12)
+    c.setFont("Helvetica-Bold", 11)
+    name(c,empname)
+    c.setFont("Helvetica-Bold", 11)
+    m_name(c,mname)
+    c.setFont("Helvetica", 12)
+
+    add_fback(c, df, content_style)
+    c.showPage()
+    # Set font and size
+    c.setFont("Helvetica", 18)
+    #c.drawString(300, 750, 'abc')
+    #c.drawString(250, 700, 'def')
+    ## Add header##
+    #header(c, data)
+    #print(name1)
+    #name(c,name1)
+    c.save()
+
+    #     output_pdf_file = f"{group_name_1}_{group_name_2}.pdf"
+    #     generate_pdf(group_data, output_pdf_file)
+    #
+    #
+    # c.drawString(100, 750, "Dynamic Section 1: Example")
+    # c.drawString(100, 730, "Dynamic Section 2: Another Example")
+    #
+    # # Draw lines with unique values from the Excel file
+    # y_position = 700
+    # for row in data.itertuples():
+    #     line = f"Employee Number: {row.feedbackfor}"
+    #     c.drawString(100, y_position, line)
+    #     y_position -= 15  # Adjust the vertical position for the next line
+    #
+    # # Save the PDF
+    # c.save()
+
+# Read Excel file
+excel_file_path = '"test.xlsx"'
+df = pd.read_excel("test.xlsx")
+# Write dynamic sections
+grouped_data = df.groupby([df.columns[0], df.columns[1],df.columns[2]])
+
+for (group_name_1, group_name_2,group_name_3), group_data in grouped_data:
+    output_pdf_file = f"{group_name_1}_{group_name_2}.pdf"
+    create_pdf(output_pdf_file,group_name_2,group_name_1,group_name_3,group_data)
+
+
+
+
